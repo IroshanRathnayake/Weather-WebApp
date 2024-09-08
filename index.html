@@ -22,7 +22,7 @@
         <div class="row align-items-center">
           <div class="col-md-6 mb-3">
             <h3 class="mb-0 fw-bold">Weather Forecast</h3>
-            <p id="display-date">Tuesday 26, August 2024</p>
+            <p id="display-date"></p>
           </div>
           <div class="col-md-4 mb-3">
             <input
@@ -47,9 +47,11 @@
             <div class="main-card p-3 rounded">
               <div class="row">
                 <div class="col-md-5">
-                  <h2 class="fw-bold opacity-90 m-2">New York</h2>
-                  <p class="country opacity-75 fw-bold">United States</p>
-                  <h1 class="display-temp">24°C</h1>
+                  <h2 class="fw-bold opacity-90 m-2" id="city">New York</h2>
+                  <p class="country opacity-75 fw-bold" id="country">
+                    United States
+                  </p>
+                  <h1 class="display-temp" id="display-temp">24°C</h1>
                 </div>
                 <div class="col-md-7">
                   <img
@@ -64,13 +66,20 @@
 
             <div class="container">
               <ul class="d-flex list-unstyled section-type">
-                <button class="me-2 fw-bold today">Today</button>
-                <button class="me-2 fw-bold week active">Week</button>
+                <button class="me-2 fw-bold today" onclick="showData('day')">
+                  Today
+                </button>
+                <button
+                  class="me-2 fw-bold week active"
+                  onclick="showData('week')"
+                >
+                  Week
+                </button>
               </ul>
             </div>
 
             <!-- Week Card List -->
-            <div class="container row d-flex">
+            <div class="container row d-flex" id="week-card">
               <!-- Sunday Card-->
               <div class="col-auto col-md-3">
                 <div class="week-card">
@@ -243,9 +252,6 @@
                   </div>
                 </div>
               </div>
-              <!-- End of card row 1 -->
-            </div>
-            <div class="container row d-flex mt-4">
               <!-- Thursday Card -->
               <div class="col-auto col-md-3">
                 <div class="week-card">
@@ -375,14 +381,9 @@
                   </div>
                 </div>
               </div>
-              <!-- Extra -->
-              <div class="col-auto col-md-3">
-                <div class="week-card">
-                  
-                </div>
-              </div>
             </div>
-            <!-- End of card row 2 -->
+
+            <!-- End of cards -->
 
             <div class="container mt-3 sub-heading">Today's Highlights</div>
 
@@ -393,23 +394,24 @@
                 <div class="highlight-card">
                   <h5>Sunrise and Sunset</h5>
 
-                  <div class="row d-flex justify-content-evenly align-items-center mt-4">
+                  <div
+                    class="row d-flex justify-content-evenly align-items-center mt-4"
+                  >
                     <div class="col-3">
-                      <img src="assets/icons/sunrise.svg" alt="Sunrise">
+                      <img src="assets/icons/sunrise.svg" alt="Sunrise" />
                     </div>
                     <div class="col-3">
                       <div class="sunrise">Sunrise</div>
                       <div id="sunrise-time">06.20</div>
                     </div>
                     <div class="col-3">
-                      <img src="assets/icons/sunset.svg" alt="Sunset">
+                      <img src="assets/icons/sunset.svg" alt="Sunset" />
                     </div>
                     <div class="col-3">
                       <div class="sunset">Sunset</div>
                       <div id="sunset-time">05.30</div>
                     </div>
                   </div>
-
                 </div>
               </div>
               <!-- Card Air Quality -->
@@ -417,13 +419,19 @@
                 <div class="highlight-card">
                   <h5>Air Quality Index</h5>
                   <div class="row d-flex">
-                      <div class="col-2">
-                        <img src="assets/icons/air.svg" alt="Air Quality">
+                    <div class="col-2">
+                      <img
+                        src="assets/icons/air.svg"
+                        alt="Air Quality"
+                        id="air-quality-image"
+                      />
+                    </div>
+                    <div class="col-10">
+                      <div id="air-quality">Good</div>
+                      <div id="air-quality-description">
+                        A perfect day for a week!
                       </div>
-                      <div class="col-10">
-                        <div id="air-quality">Good</div>
-                        <div id="air-quality-description">A perfect day for a week!</div>
-                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -440,8 +448,22 @@
             <div class="calendar">
               <h5 id="calender-title">September</h5>
               <table class="table table-sm">
-                  <!-- Calendar content -->
+                <!-- Calendar content -->
               </table>
+            </div>
+
+            <!-- Location Section -->
+            <div class="location">
+              <h5 id="location-title">
+                Location <img src="assets/icons/location.svg" alt="" />
+              </h5>
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.25280033762!2d-74.14448685227137!3d40.69763123323693!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2slk!4v1725693480990!5m2!1sen!2slk"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                class="location-map"
+              ></iframe>
             </div>
           </div>
         </div>
