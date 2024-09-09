@@ -8,6 +8,8 @@ const sunriseTime = document.getElementById("sunrise-time");
 const sunsetTime = document.getElementById("sunset-time");
 const airQuality = document.getElementById("air-quality");
 const airQualityImg = document.getElementById("air-quality-image");
+const airQualityDetails = document.getElementById("air-quality-details");
+const ctx = document.getElementById("myLineChart").getContext("2d");
 const api_key = "5d2532334af84796b8d120210240309";
 
 // Get current date
@@ -104,11 +106,13 @@ searchBox.addEventListener("keydown", (event) => {
 });
 
 // Function to update weather forecast
-function showData(type) {
+async function showData(type) {
+  const city = displayCity.innerText;
   if (type === "day") {
-    getWeatherData(searchBox.value, "week");
+    const data = await getWeatherData(city);
+    updateTodayWeatherForecast(data);
   } else {
-    getWeatherData(searchBox.value, "week");
+    getWeatherData(city);
   }
 }
 
@@ -130,37 +134,39 @@ function getPublicIp() {
 getPublicIp();
 
 // Function to get weather data
-function getWeatherData(city) {
-  fetch(
-    `https://api.weatherapi.com/v1/forecast.json?key=${api_key}&q=${city}&days=7`
-  )
-    .then((response) => response.json())
-    .then((result) => {
-      if (result.location && result.current) {
-        displayCity.innerHTML = result.location.name;
-        displayCountry.innerHTML = result.location.country;
-        displayTemp.innerHTML = `${result.current.temp_c}°C`;
-        updateAirQuality(result.location.name);
+async function getWeatherData(city) {
+  try {
+    const response = await fetch(
+      `https://api.weatherapi.com/v1/forecast.json?key=${api_key}&q=${city}&days=7`
+    );
+    const result = await response.json();
 
-        if (result.forecast && result.forecast.forecastday) {
-          updateWeatherForecast(result.forecast.forecastday, "week");
-        } else {
-          console.error("Forecast data not available.");
-        }
+    if (result.location && result.current) {
+      displayCity.innerHTML = result.location.name;
+      displayCountry.innerHTML = result.location.country;
+      displayTemp.innerHTML = `${result.current.temp_c}°C`;
+      updateAirQuality(result.location.name);
+
+      if (result.forecast && result.forecast.forecastday) {
+        updateWeatherForecast(result.forecast.forecastday, "week");
+        return result.forecast.forecastday[0].hour; //Return data for 24 hours
       } else {
-        console.error("Location or Current weather data is missing.");
+        console.error("Forecast data not available.");
+        return [];
       }
-    })
-    .catch((error) => {
-      console.error(error);
-      alert("City Not Found");
-    });
+    } else {
+      console.error("Location or Current weather data is missing.");
+    }
+  } catch (error) {
+    console.error(error);
+    alert("City Not Found");
+  }
 }
 
 // Function to update weather forecast
 function updateWeatherForecast(data, type) {
-  sunriseTime.innerHTML = data[0].astro.sunrise.replace(" AM", "");
-  sunsetTime.innerHTML = data[0].astro.sunset.replace(" PM", "");
+  sunriseTime.innerHTML = data[0].astro.sunrise;
+  sunsetTime.innerHTML = data[0].astro.sunset;
 
   weekCard.innerHTML = "";
   let numCards = type === "day" ? 24 : 7;
@@ -211,7 +217,7 @@ function updateWeatherForecast(data, type) {
                       </div>
                     </div>
                     <div class="col-1 align-content-end align-items-end">
-                      <h3 class="card-temp">${dayTemp}</h3>
+                      <h3 class="card-temp">${dayTemp}°</h3>
                     </div>
                   </div>
                 </div>
@@ -221,6 +227,67 @@ function updateWeatherForecast(data, type) {
   }
 }
 
+//Update Today Weather Forecast
+function updateTodayWeatherForecast(data) {
+  let numCards = 24;
+  weekCard.innerHTML = ``;
+
+  for (let i = 0; i < numCards; i++) {
+    let dateTime = data[i].time;
+    let hour = dateTime.split(" ")[1];
+    let temp = Math.round(data[i].temp_c);
+    let weatherCondition = getCondition(data[i].condition.code);
+    let iconSrc = data[i].condition.icon;
+    let windSpeed = Math.round(data[i].wind_kph);
+    let humidity = Math.round(data[i].humidity);
+
+    weekCard.innerHTML += `
+      <div class="col-auto col-md-3">
+                <div class="week-card">
+                  <div class="row d-flex justify-content-between">
+                    <div class="col-6">
+                      <h4 class="fw-bold">${hour}</h4>
+                      <p class="fw-bold opacity-75">${weatherCondition}</p>
+                    </div>
+                    <div class="col-6">
+                      <img
+                        src="${iconSrc}"
+                        alt="cloudy"
+                        class="card-img"
+                      />
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-5">
+                      <div class="row">
+                        <div class="col-6">
+                          <img
+                            src="assets/icons/wind-speed.svg"
+                            alt="Wind Speed"
+                            class="windspeed-img"
+                          />
+                          <img
+                            src="assets/icons/humidity.svg"
+                            alt="Humidity"
+                            class="humidity-img mt-2"
+                          />
+                        </div>
+                        <div class="col-6">
+                          <p class="wind-speed">${windSpeed}kmh</p>
+                          <p class="mb-2 humidity">${humidity}%</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-1 align-content-end align-items-end">
+                      <h3 class="card-temp">${temp}°</h3>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+    `;
+  }
+}
 // Function to get weather condition based on code
 function getCondition(conditionCode) {
   const weatherConditions = [
@@ -311,12 +378,61 @@ function updateAirQuality(location) {
     .then((response) => response.json())
     .then((result) => {
       let status =
-        parseFloat(result.current.air_quality.o3) >= 40.0 ? `Good` : `Bad`;
+        parseFloat(result.current.air_quality.o3) >= 40.0 ? `Good^` : `Bad^`;
 
-      airQuality.style.color = status === "Good" ? "#0AC249" : "red";
+      airQuality.style.color = status == "Good^" ? "#0AC249" : "red";
       //airQualityImg.style.color = status === "Good" ? "red" : "red";
 
       airQuality.innerHTML = status;
+
+      airQualityDetails.innerHTML = ``;
+
+      for (let i = 0; i < 5; i++) {
+        airQualityDetails.innerHTML += `
+           <div class="air-card col-3">
+            ${Object.keys(result.current.air_quality)[i]}
+            <div class="fw-medium">${
+              result.current.air_quality[
+                Object.keys(result.current.air_quality)[i]
+              ]
+            }</div>
+            </div>
+        `;
+      }
     })
     .catch((error) => console.error(error));
 }
+
+// Temp Graph Line chart
+const myLineChart = new Chart(ctx, {
+  type: "line",
+  data: {
+    labels: [
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ], // X-axis
+    datasets: [
+      {
+        label: "Temperature in °C",
+        data: [10, 23, 15, 20, 25, 30, 28], // Y-axis
+        backgroundColor: "rgba(92, 156, 229, 0.2)",
+        borderColor: "rgba(92, 156, 2292, 1)",
+        borderWidth: 1,
+        fill: false,
+      },
+    ],
+  },
+  options: {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  },
+});
