@@ -9,6 +9,8 @@ const sunsetTime = document.getElementById("sunset-time");
 const airQuality = document.getElementById("air-quality");
 const airQualityImg = document.getElementById("air-quality-image");
 const airQualityDetails = document.getElementById("air-quality-details");
+const btnWeek = document.getElementById("btnWeek");
+const btnToday = document.getElementById("btnToday");
 const ctx = document.getElementById("myLineChart").getContext("2d");
 const api_key = "5d2532334af84796b8d120210240309";
 
@@ -110,8 +112,12 @@ async function showData(type) {
   const city = displayCity.innerText;
   if (type === "day") {
     const data = await getWeatherData(city);
+    btnToday.style.color = "var(--primary-color)";
+    btnWeek.style.color = "var(--font-color)";
     updateTodayWeatherForecast(data);
   } else {
+    btnToday.style.color ="var(--font-color)";
+    btnWeek.style.color ="var(--primary-color)" ;
     getWeatherData(city);
   }
 }
