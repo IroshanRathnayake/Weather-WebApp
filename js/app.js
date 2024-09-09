@@ -387,8 +387,6 @@ function updateAirQuality(location) {
         parseFloat(result.current.air_quality.o3) >= 40.0 ? `Good^` : `Bad^`;
 
       airQuality.style.color = status == "Good^" ? "#0AC249" : "red";
-      //airQualityImg.style.color = status === "Good" ? "red" : "red";
-
       airQuality.innerHTML = status;
 
       airQualityDetails.innerHTML = ``;
@@ -425,7 +423,7 @@ const myLineChart = new Chart(ctx, {
     datasets: [
       {
         label: "Temperature in °C",
-        data: [10, 23, 15, 20, 25, 30, 28], // Y-axis
+        data: [20, 15, 10, 20, 25, 30, 28], // Y-axis
         backgroundColor: "rgba(92, 156, 229, 0.2)",
         borderColor: "rgba(92, 156, 2292, 1)",
         borderWidth: 1,
