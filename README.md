@@ -32,7 +32,7 @@ This project is a **Weather Forecast Web Application** that displays weather con
 
 ![Weekly Forecast Screenshot](/assets/images/week-forecast.png)
 
-### Weekly Forecast
+### Today Forecast
 
 ![Today Forecast Screenshot](/assets/images/today-forecast.png)
 
