@@ -414,13 +414,13 @@ const myLineChart = new Chart(ctx, {
   type: "line",
   data: {
     labels: [
+      "March",
+      "April",
+      "May",
       "June",
       "July",
       "August",
       "September",
-      "October",
-      "November",
-      "December",
     ], // X-axis
     datasets: [
       {
