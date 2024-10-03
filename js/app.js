@@ -1,5 +1,6 @@
 // DOM elements
 const searchBox = document.getElementById("searchBox");
+const suggestionsContainer = document.getElementById("suggestions");
 const displayCity = document.getElementById("city");
 const displayCountry = document.getElementById("country");
 const displayTemp = document.getElementById("display-temp");
@@ -11,8 +12,16 @@ const airQualityImg = document.getElementById("air-quality-image");
 const airQualityDetails = document.getElementById("air-quality-details");
 const btnWeek = document.getElementById("btnWeek");
 const btnToday = document.getElementById("btnToday");
+const btnCelcius = document.getElementById("btnCelcius");
+const btnFahrenheit = document.getElementById("btnFahrenheit");
 const ctx = document.getElementById("myLineChart").getContext("2d");
 const api_key = "5d2532334af84796b8d120210240309";
+
+// Variables
+let dispayType = "week";
+let isCelsius = true;
+let debounceTimer;
+let selectedIndex = -1;
 
 // Get current date
 const currentDate = new Date();
@@ -100,20 +109,98 @@ function setDisplayDate() {
   displayDate.innerHTML = `${day} ${date}, ${month} ${year}`;
 }
 
-// Update calendar and date on page load
-updateCalendar();
-setDisplayDate();
+// Toggle temperature
+function toggleTemperature(tempType) {
+  if (tempType === "celsius") {
+    btnCelcius.classList.add("active");
+    btnFahrenheit.classList.remove("active");
+  } else {
+    btnFahrenheit.classList.add("active");
+    btnCelcius.classList.remove("active");
+  }
+  isCelsius = !isCelsius;
+  const city = displayCity.innerText;
+  getWeatherData(city);
+}
 
-// Event listener for search box
+//search box action
+searchBox.addEventListener("input", () => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    const query = searchBox.value;
+    if (query.length > 2) {
+      fetchCitySuggestions(query);
+    } else {
+      suggestionsContainer.innerHTML = "";
+    }
+  }, 300);
+});
+
+//fetch city suggestions
+async function fetchCitySuggestions(query) {
+  try {
+    const response = await fetch(
+      `https://api.weatherapi.com/v1/search.json?key=${api_key}&q=${query}`
+    );
+    const data = await response.json();
+    displaySuggestions(data.slice(0, 5));
+  } catch (error) {
+    console.error("Error fetching city suggestions:", error);
+  }
+}
+
+//Display city suggestions
+function displaySuggestions(suggestions) {
+  suggestionsContainer.innerHTML = "";
+  selectedIndex = -1;
+
+  suggestions.forEach((city, index) => {
+    const div = document.createElement("div");
+    div.classList.add("suggestion-item");
+    div.textContent = `${city.name}, ${city.country}`;
+    div.addEventListener("click", () => {
+      selectCity(city.name);
+    });
+    suggestionsContainer.appendChild(div);
+  });
+}
+
+function selectCity(cityName) {
+  searchBox.value = cityName;
+  suggestionsContainer.innerHTML = "";
+  getWeatherData(cityName);
+}
+
+//Select city using allows
 searchBox.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    getWeatherData(searchBox.value);
+  const items = document.querySelectorAll(".suggestion-item");
+  if (items.length > 0) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      selectedIndex = (selectedIndex + 1) % items.length;
+      highlightSuggestion(items);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+      highlightSuggestion(items);
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      if (selectedIndex > -1) {
+        items[selectedIndex].click();
+      }
+    }
   }
 });
 
-let dispayType= "week";
+//Highlight suggestion
+function highlightSuggestion(items) {
+  items.forEach((item) => item.classList.remove("selected"));
+  if (selectedIndex >= 0) {
+    items[selectedIndex].classList.add("selected");
+  }
+}
 
-// Function to update weather forecast
+// Update weather forecast
 function showData(type) {
   const city = displayCity.innerText;
   if (type === "day") {
@@ -129,24 +216,26 @@ function showData(type) {
   }
 }
 
-// Function to get public IP address and weather data for location
-function getPublicIp() {
-  fetch("https://ipapi.co/json/", {
-    method: "GET",
-    headers: {},
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      getWeatherData(data.country_name);
-    })
-    .catch((err) => {
-      console.error(err);
-    });
+//Get Current Location Weather
+function fetchCurrentLocationWeather() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        getWeatherData(`${lat},${lon}`);
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        getWeatherData("Colombo");
+      }
+    );
+  } else {
+    getWeatherData("Colombo");
+  }
 }
 
-//getPublicIp();
-
-// Function to get weather data
+// Get weather data
 async function getWeatherData(city) {
   try {
     const response = await fetch(
@@ -162,13 +251,11 @@ async function getWeatherData(city) {
 
     if (result.forecast && result.forecast.forecastday) {
       updateWeatherForecast(result.forecast.forecastday);
-    
     } else {
       console.error("Forecast data not available.");
     }
   } catch (error) {
     console.error(error);
-    // alert("City Not Found");
   }
 }
 
@@ -176,11 +263,15 @@ async function getWeatherData(city) {
 function updateMainWeatherData(data) {
   displayCity.innerHTML = data.location.name;
   displayCountry.innerHTML = data.location.country;
-  displayTemp.innerHTML = `${data.current.temp_c}°C`;
+  if (isCelsius) {
+    displayTemp.innerHTML = `${Math.round(data.current.temp_c)}°C`;
+  } else {
+    displayTemp.innerHTML = `${Math.round(data.current.temp_f)}°F`;
+  }
   updateAirQuality(data.location.name);
 }
 
-// Function to update weather forecast
+// Update weather forecast
 function updateWeatherForecast(data) {
   console.log(data);
 
@@ -197,17 +288,21 @@ function updateWeatherForecast(data) {
     let iconSrc = "";
     let windSpeed = "";
     let humidity = "";
-    if(dispayType === "week"){
+    if (dispayType === "week") {
       heading = getDayName(data[i].date);
-      temp = Math.round(data[i].day.avgtemp_c);
+      temp = isCelsius
+        ? Math.round(data[i].day.avgtemp_c)
+        : Math.round(data[i].day.avgtemp_f);
       weatherCondition = getCondition(data[i].day.condition.code);
       iconSrc = data[i].day.condition.icon;
       windSpeed = Math.round(data[i].day.maxwind_kph);
-      humidity= Math.round(data[i].day.avghumidity);
-    }else{
+      humidity = Math.round(data[i].day.avghumidity);
+    } else {
       let time = data[0].hour[i].time;
       heading = time.split(" ")[1];
-      temp= Math.round(data[0].hour[i].temp_c);
+      temp = isCelsius
+        ? Math.round(data[0].hour[i].temp_c)
+        : Math.round(data[0].hour[i].temp_f);
       weatherCondition = getCondition(data[0].hour[i].condition.code);
       iconSrc = data[0].hour[i].condition.icon;
       windSpeed = Math.round(data[0].hour[i].wind_kph);
@@ -252,7 +347,7 @@ function updateWeatherForecast(data) {
                       </div>
                     </div>
                     <div class="col-1 align-content-end align-items-end">
-                      <h3 class="card-temp">${temp}°</h3>
+                       <h3 class="card-temp">${temp}°</h3>
                     </div>
                   </div>
                 </div>
@@ -262,7 +357,7 @@ function updateWeatherForecast(data) {
   }
 }
 
-// Function to get weather condition based on code
+//Get weather condition based on code
 function getCondition(conditionCode) {
   const weatherConditions = [
     { code: 1000, text: "Sunny" },
@@ -323,7 +418,7 @@ function getCondition(conditionCode) {
   return "Unknown";
 }
 
-// Function to get the day name from a date string
+// Get the day name from a date string
 function getDayName(dateStr) {
   const date = new Date(dateStr);
   const days = [
@@ -400,3 +495,10 @@ const myLineChart = new Chart(ctx, {
     },
   },
 });
+
+//Page Onload actions
+window.onload = () => {
+  updateCalendar();
+  setDisplayDate();
+  fetchCurrentLocationWeather();
+};
