@@ -17,6 +17,10 @@ const api_key = "5d2532334af84796b8d120210240309";
 // Get current date
 const currentDate = new Date();
 
+//Update Month
+document.getElementById("calender-title").innerHTML =
+  currentDate.toLocaleString("default", { month: "long" });
+
 // Function to update the calendar
 function updateCalendar() {
   const calendarBody = document.querySelector(".table");
@@ -107,17 +111,20 @@ searchBox.addEventListener("keydown", (event) => {
   }
 });
 
+let dispayType= "week";
+
 // Function to update weather forecast
-async function showData(type) {
+function showData(type) {
   const city = displayCity.innerText;
   if (type === "day") {
-    const data = await getWeatherData(city);
     btnToday.style.color = "var(--primary-color)";
     btnWeek.style.color = "var(--font-color)";
-    updateTodayWeatherForecast(data);
+    dispayType = "day";
+    getWeatherData(city);
   } else {
-    btnToday.style.color ="var(--font-color)";
-    btnWeek.style.color ="var(--primary-color)" ;
+    btnToday.style.color = "var(--font-color)";
+    btnWeek.style.color = "var(--primary-color)";
+    dispayType = "week";
     getWeatherData(city);
   }
 }
@@ -137,7 +144,7 @@ function getPublicIp() {
     });
 }
 
-getPublicIp();
+//getPublicIp();
 
 // Function to get weather data
 async function getWeatherData(city) {
@@ -148,111 +155,71 @@ async function getWeatherData(city) {
     const result = await response.json();
 
     if (result.location && result.current) {
-      displayCity.innerHTML = result.location.name;
-      displayCountry.innerHTML = result.location.country;
-      displayTemp.innerHTML = `${result.current.temp_c}°C`;
-      updateAirQuality(result.location.name);
-
-      if (result.forecast && result.forecast.forecastday) {
-        updateWeatherForecast(result.forecast.forecastday, "week");
-        return result.forecast.forecastday[0].hour; //Return data for 24 hours
-      } else {
-        console.error("Forecast data not available.");
-        return [];
-      }
+      updateMainWeatherData(result);
     } else {
       console.error("Location or Current weather data is missing.");
     }
+
+    if (result.forecast && result.forecast.forecastday) {
+      updateWeatherForecast(result.forecast.forecastday);
+    
+    } else {
+      console.error("Forecast data not available.");
+    }
   } catch (error) {
     console.error(error);
-    alert("City Not Found");
+    // alert("City Not Found");
   }
 }
 
+//Update Main data
+function updateMainWeatherData(data) {
+  displayCity.innerHTML = data.location.name;
+  displayCountry.innerHTML = data.location.country;
+  displayTemp.innerHTML = `${data.current.temp_c}°C`;
+  updateAirQuality(data.location.name);
+}
+
 // Function to update weather forecast
-function updateWeatherForecast(data, type) {
+function updateWeatherForecast(data) {
+  console.log(data);
+
   sunriseTime.innerHTML = data[0].astro.sunrise;
   sunsetTime.innerHTML = data[0].astro.sunset;
 
   weekCard.innerHTML = "";
-  let numCards = type === "day" ? 24 : 7;
+  let numCards = dispayType === "week" ? 7 : 24;
 
   for (let i = 0; i < numCards; i++) {
-    let dayName = getDayName(data[i].date);
-    let dayTemp = Math.round(data[i].day.avgtemp_c);
-    let weatherCondition = getCondition(data[i].day.condition.code);
-    let iconSrc = data[i].day.condition.icon;
-    let windSpeed = Math.round(data[i].day.maxwind_kph);
-    let humidity = Math.round(data[i].day.avghumidity);
+    let heading = "";
+    let temp = "";
+    let weatherCondition = "";
+    let iconSrc = "";
+    let windSpeed = "";
+    let humidity = "";
+    if(dispayType === "week"){
+      heading = getDayName(data[i].date);
+      temp = Math.round(data[i].day.avgtemp_c);
+      weatherCondition = getCondition(data[i].day.condition.code);
+      iconSrc = data[i].day.condition.icon;
+      windSpeed = Math.round(data[i].day.maxwind_kph);
+      humidity= Math.round(data[i].day.avghumidity);
+    }else{
+      let time = data[0].hour[i].time;
+      heading = time.split(" ")[1];
+      temp= Math.round(data[0].hour[i].temp_c);
+      weatherCondition = getCondition(data[0].hour[i].condition.code);
+      iconSrc = data[0].hour[i].condition.icon;
+      windSpeed = Math.round(data[0].hour[i].wind_kph);
+      humidity = Math.round(data[0].hour[i].humidity);
+    }
 
     weekCard.innerHTML += `
-      <div class="col-auto col-md-3">
+      <div class="col-lg-3 col-md-6 col-sm-12">
                 <div class="week-card">
                   <div class="row d-flex justify-content-between">
                     <div class="col-6">
-                      <h4 class="fw-bold">${dayName}</h4>
-                      <p class="fw-bold opacity-75">${weatherCondition}</p>
-                    </div>
-                    <div class="col-6">
-                      <img
-                        src="${iconSrc}"
-                        alt="cloudy"
-                        class="card-img"
-                      />
-                    </div>
-                  </div>
-                  <div class="row">
-                    <div class="col-5">
-                      <div class="row">
-                        <div class="col-6">
-                          <img
-                            src="assets/icons/wind-speed.svg"
-                            alt="Wind Speed"
-                            class="windspeed-img"
-                          />
-                          <img
-                            src="assets/icons/humidity.svg"
-                            alt="Humidity"
-                            class="humidity-img mt-2"
-                          />
-                        </div>
-                        <div class="col-6">
-                          <p class="wind-speed">${windSpeed}kmh</p>
-                          <p class="mb-2 humidity">${humidity}%</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="col-1 align-content-end align-items-end">
-                      <h3 class="card-temp">${dayTemp}°</h3>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-    `;
-  }
-}
-
-//Update Today Weather Forecast
-function updateTodayWeatherForecast(data) {
-  let numCards = 24;
-  weekCard.innerHTML = ``;
-
-  for (let i = 0; i < numCards; i++) {
-    let dateTime = data[i].time;
-    let hour = dateTime.split(" ")[1];
-    let temp = Math.round(data[i].temp_c);
-    let weatherCondition = getCondition(data[i].condition.code);
-    let iconSrc = data[i].condition.icon;
-    let windSpeed = Math.round(data[i].wind_kph);
-    let humidity = Math.round(data[i].humidity);
-
-    weekCard.innerHTML += `
-      <div class="col-auto col-md-3">
-                <div class="week-card">
-                  <div class="row d-flex justify-content-between">
-                    <div class="col-6">
-                      <h4 class="fw-bold">${hour}</h4>
+                      <h4 class="fw-bold">${heading}</h4>
                       <p class="fw-bold opacity-75">${weatherCondition}</p>
                     </div>
                     <div class="col-6">
@@ -294,6 +261,7 @@ function updateTodayWeatherForecast(data) {
     `;
   }
 }
+
 // Function to get weather condition based on code
 function getCondition(conditionCode) {
   const weatherConditions = [
@@ -391,9 +359,9 @@ function updateAirQuality(location) {
 
       airQualityDetails.innerHTML = ``;
 
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 3; i++) {
         airQualityDetails.innerHTML += `
-           <div class="air-card col-3">
+           <div class="air-card col-3 mt-4 m-2 text-center">
             ${Object.keys(result.current.air_quality)[i]}
             <div class="fw-medium">${
               result.current.air_quality[
@@ -411,15 +379,7 @@ function updateAirQuality(location) {
 const myLineChart = new Chart(ctx, {
   type: "line",
   data: {
-    labels: [
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-    ], // X-axis
+    labels: ["March", "April", "May", "June", "July", "August", "September"], // X-axis
     datasets: [
       {
         label: "Temperature in °C",

@@ -19,9 +19,30 @@ body {
   font-family: var(--main-font);
 }
 
+.background-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
 h2 {
   font-family: var(--main-font);
   color: var(--font-color);
+}
+
+h3{
+  font-family: var(--secondary-font);
+  color: var(--secondary-color);
+}
+
+.form-control{
+  font-family: var(--secondary-font);
+  color: var(--font-color);
+  font-size: 1rem;
+  opacity: 0.8;
 }
 
 .main-box {
@@ -35,6 +56,7 @@ h2 {
 
 #display-date {
   font-family: var(--secondary-font);
+  color: var(--font-color);
   opacity: 0.5;
   font-size: 1.2rem;
 }
@@ -63,7 +85,8 @@ h2 {
 }
 
 .main-card {
-  background-color: #b4d6ff;
+  background-color: #d0e5ff;
+  opacity: 0.9;
   border-radius: 40px;
   width: 100%;
   height: 215px;
@@ -114,6 +137,7 @@ h2 {
 
 .week-card {
   background-color: white;
+  opacity: 0.8;
   border-radius: 30px;
   width: 100%;
   height: 180px;
@@ -172,6 +196,7 @@ h2 {
 
 .highlight-card {
   background-color: white;
+  opacity: 0.8;
   border-radius: 30px;
   width: auto;
   height: 200px;
@@ -219,6 +244,7 @@ h2 {
 
 .calendar {
   background-color: white;
+  opacity: 0.8;
   border-radius: 40px;
   width: 100%;
   height: 280px;
@@ -260,6 +286,7 @@ th {
 
 .location {
   background-color: white;
+  opacity: 0.8;
   border-radius: 40px;
   width: 100%;
   height: 400px;
@@ -336,6 +363,7 @@ th {
   }
 
   .calendar {
+    visibility: visible;
     height: 47%;
   }
   .location {
@@ -350,5 +378,8 @@ th {
   .main-img {
     width: 100%;
     height: 100%;
+  }
+  .calendar{
+    visibility: hidden;
   }
 }
