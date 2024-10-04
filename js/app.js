@@ -15,7 +15,7 @@ const btnToday = document.getElementById("btnToday");
 const btnCelcius = document.getElementById("btnCelcius");
 const btnFahrenheit = document.getElementById("btnFahrenheit");
 const ctx = document.getElementById("myLineChart").getContext("2d");
-const api_key = "5d2532334af84796b8d120210240309";
+const api_key = "f2551486326a4c38963153736240410";
 
 // Variables
 let dispayType = "week";
@@ -251,6 +251,8 @@ async function getWeatherData(city) {
 
     if (result.forecast && result.forecast.forecastday) {
       updateWeatherForecast(result.forecast.forecastday);
+      const next7DaysData = result.forecast.forecastday;
+      renderTemperatureGraph(next7DaysData);
     } else {
       console.error("Forecast data not available.");
     }
@@ -434,13 +436,13 @@ function getDayName(dateStr) {
 }
 
 //Update Air Quality
-function updateAirQuality(location) {
+async function updateAirQuality(location) {
   const requestOptions = {
     method: "GET",
     redirect: "follow",
   };
 
-  fetch(
+  await fetch(
     `https://api.weatherapi.com/v1//current.json?key=${api_key}&q=${location}&aqi=yes`,
     requestOptions
   )
@@ -457,11 +459,14 @@ function updateAirQuality(location) {
       for (let i = 0; i < 3; i++) {
         airQualityDetails.innerHTML += `
            <div class="air-card col-3 mt-4 m-2 text-center">
-            ${Object.keys(result.current.air_quality)[i]}
-            <div class="fw-medium">${
+            
+            <div class="fw-semibold fs-6">${
               result.current.air_quality[
                 Object.keys(result.current.air_quality)[i]
               ]
+            }</div>
+            <div class="fs-7">${
+              Object.keys(result.current.air_quality)[i]
             }</div>
             </div>
         `;
@@ -471,30 +476,42 @@ function updateAirQuality(location) {
 }
 
 // Temp Graph Line chart
-const myLineChart = new Chart(ctx, {
-  type: "line",
-  data: {
-    labels: ["March", "April", "May", "June", "July", "August", "September"], // X-axis
-    datasets: [
-      {
-        label: "Temperature in °C",
-        data: [20, 15, 10, 20, 25, 30, 28], // Y-axis
-        backgroundColor: "rgba(92, 156, 229, 0.2)",
-        borderColor: "rgba(92, 156, 2292, 1)",
-        borderWidth: 1,
-        fill: false,
-      },
-    ],
-  },
-  options: {
-    responsive: true,
-    scales: {
-      y: {
-        beginAtZero: true,
+function renderTemperatureGraph(dailyData) {
+  const dates = dailyData.map((day) => {
+    const date = new Date(day.date);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  });
+
+  const temperatures = dailyData.map((day) => day.day.avgtemp_c);
+
+  const myLineChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: dates,
+      datasets: [
+        {
+          label: "Average Temperature in °C",
+          data: temperatures,
+          backgroundColor: "rgba(92, 156, 229, 0.2)",
+          borderColor: "rgba(92, 156, 229, 1)",
+          borderWidth: 1,
+          fill: false,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
       },
     },
-  },
-});
+  });
+}
 
 //Page Onload actions
 window.onload = () => {

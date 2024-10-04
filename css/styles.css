@@ -6,8 +6,8 @@
   --tertiary-color: #e4f0fe;
   --success-color: #0ac249;
   --font-color: #1a1a1a;
-  --main-font: "Poppins", sans-serif;
-  --secondary-font: "Ubuntu", sans-serif;
+  --main-font: "Inter", sans-serif;
+  --secondary-font: "Poppins", sans-serif;
 }
 
 * {
@@ -75,6 +75,7 @@ h3 {
   width: 40px;
   height: 40px;
   border-radius: 50%;
+  opacity: 0.8;
   color: var(--font-color);
   background-color: white;
   border: none;
@@ -114,9 +115,9 @@ h3 {
   position: relative;
   z-index: 2;
   width: 100%;
-  height: 90%;
+  height: 88%;
   object-fit: fill;
-  margin-left: 15px;
+  margin-left: 18px;
 }
 
 .section-type {
@@ -424,15 +425,16 @@ th {
   }
 }
 
-@media (max-width: 1280px) {
+@media (min-width: 768px) and (max-width: 1280px) {
   .main-card {
     height: 215px;
   }
   .main-img {
     width: 100%;
-    height: 100%;
+    height: 112%;
   }
-  .calendar {
-    visibility: hidden;
+
+  .right-panel {
+    display: none;
   }
 }
